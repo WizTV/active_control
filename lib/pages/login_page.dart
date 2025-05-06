@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'register_page.dart'; // Import the RegisterPage
 import '../widgets/custom_text_field.dart';
 import '../widgets/login_button.dart';
 import '../widgets/google_button.dart';
@@ -143,7 +144,11 @@ class LoginPage extends StatelessWidget {
                   ),
                   GestureDetector(
                     onTap: () {
-                      // Add navigation logic here for the "Sign up" page
+                      // Navigate to the RegisterPage
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const RegisterPage()),
+                      );
                     },
                     child: const Text(
                       'Sign up',
