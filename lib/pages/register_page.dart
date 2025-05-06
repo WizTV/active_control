@@ -1,12 +1,46 @@
 import 'package:flutter/material.dart';
 import 'login_page.dart'; // Import the LoginPage
-
 import '../widgets/custom_text_field.dart';
 import '../widgets/login_button.dart';
 import '../widgets/google_button.dart';
 
-class RegisterPage extends StatelessWidget {
+class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
+
+  @override
+  State<RegisterPage> createState() => _RegisterPageState();
+}
+
+class _RegisterPageState extends State<RegisterPage> {
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  bool _isButtonEnabled = false;
+
+  void _updateButtonState() {
+    setState(() {
+      _isButtonEnabled = _nameController.text.isNotEmpty &&
+          _emailController.text.isNotEmpty &&
+          _passwordController.text.isNotEmpty;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController.addListener(_updateButtonState);
+    _emailController.addListener(_updateButtonState);
+    _passwordController.addListener(_updateButtonState);
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,7 +54,7 @@ class RegisterPage extends StatelessWidget {
         backgroundColor: const Color.fromRGBO(33, 52, 102, 1),
         appBar: AppBar(
           title: const Text(
-            'ACTIVE CONTROL',
+            'SIGN IN',
             style: TextStyle(
               color: Color.fromRGBO(255, 255, 255, 1),
               fontWeight: FontWeight.w800,
@@ -68,6 +102,7 @@ class RegisterPage extends StatelessWidget {
                     icon: Icons.person,
                     obscureText: false,
                     keyboardType: TextInputType.name,
+                    controller: _nameController,
                   ),
                   const Text(
                     'Email address',
@@ -82,6 +117,7 @@ class RegisterPage extends StatelessWidget {
                     icon: Icons.email,
                     obscureText: false,
                     keyboardType: TextInputType.emailAddress,
+                    controller: _emailController,
                   ),
                   const Text(
                     'Password',
@@ -95,12 +131,15 @@ class RegisterPage extends StatelessWidget {
                     hintText: 'Enter your password',
                     icon: Icons.lock,
                     obscureText: true,
+                    controller: _passwordController,
                   ),
                   LoginButton(
                     text: 'Sign in',
-                    onPressed: () {
-                      print('Sign in button pressed');
-                    },
+                    onPressed: _isButtonEnabled
+                        ? () {
+                            print('Sign in button pressed');
+                          }
+                        : null, // Disable the button if fields are empty
                   ),
                   const Center(
                     child: Text(

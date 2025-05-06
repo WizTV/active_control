@@ -4,8 +4,39 @@ import '../widgets/custom_text_field.dart';
 import '../widgets/login_button.dart';
 import '../widgets/google_button.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
+
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  bool _isButtonEnabled = false;
+
+  void _updateButtonState() {
+    setState(() {
+      _isButtonEnabled = _emailController.text.isNotEmpty &&
+          _passwordController.text.isNotEmpty;
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _emailController.addListener(_updateButtonState);
+    _passwordController.addListener(_updateButtonState);
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -67,6 +98,7 @@ class LoginPage extends StatelessWidget {
                     icon: Icons.email,
                     obscureText: false,
                     keyboardType: TextInputType.emailAddress,
+                    controller: _emailController,
                   ),
                   const Text(
                     'Password',
@@ -80,12 +112,15 @@ class LoginPage extends StatelessWidget {
                     hintText: 'Enter your password',
                     icon: Icons.lock,
                     obscureText: true,
+                    controller: _passwordController,
                   ),
                   LoginButton(
                     text: 'Log in',
-                    onPressed: () {
-                      print('Login button pressed');
-                    },
+                    onPressed: _isButtonEnabled
+                        ? () {
+                            print('Login button pressed');
+                          }
+                        : null, // Disable the button if fields are empty
                   ),
                   Center(
                     child: GestureDetector(

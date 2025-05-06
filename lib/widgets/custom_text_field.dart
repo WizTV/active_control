@@ -5,13 +5,15 @@ class CustomTextField extends StatelessWidget {
   final IconData icon;
   final bool obscureText;
   final TextInputType keyboardType;
+  final TextEditingController? controller; // Add the controller parameter
 
   const CustomTextField({
     super.key,
     required this.hintText,
     required this.icon,
     this.obscureText = false,
-    this.keyboardType = TextInputType.text, // Default to text input
+    this.keyboardType = TextInputType.text,
+    this.controller, // Initialize the controller
   });
 
   @override
@@ -19,8 +21,9 @@ class CustomTextField extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 25),
       child: TextField(
+        controller: controller, // Use the controller
         obscureText: obscureText,
-        keyboardType: keyboardType, // Set the keyboard type
+        keyboardType: keyboardType,
         decoration: InputDecoration(
           filled: true,
           fillColor: Colors.white,
