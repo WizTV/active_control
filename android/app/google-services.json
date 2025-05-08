@@ -12,7 +12,20 @@
           "package_name": "com.example.activecontrol"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "205218908282-p8ro5snnb675f5ducva59g1cb97icn2p.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.activecontrol",
+            "certificate_hash": "4393db510efb06a6dd85bbdc6de4384cb53add7f"
+          }
+        },
+        {
+          "client_id": "205218908282-r3o7aia4l3rctm6r0o0bkosh4gns3a3l.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBMCB1FnjIHI8m1Oja1f9HAazh8znz7QIU"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "205218908282-r3o7aia4l3rctm6r0o0bkosh4gns3a3l.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "205218908282-q555ofa8ms341ep36eico8td4lsl6d3c.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.activecontrol"
+              }
+            }
+          ]
         }
       }
     }

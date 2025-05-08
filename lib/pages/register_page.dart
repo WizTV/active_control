@@ -3,6 +3,7 @@ import 'login_page.dart'; // Import the LoginPage
 import '../widgets/custom_text_field.dart';
 import '../widgets/login_button.dart';
 import '../widgets/google_button.dart';
+import '../services/auth_service.dart'; // Import the AuthService
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -17,6 +18,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController _passwordController = TextEditingController();
 
   bool _isButtonEnabled = false;
+  final AuthService _authService = AuthService(); // Create an instance of AuthService
 
   void _updateButtonState() {
     setState(() {
@@ -24,6 +26,30 @@ class _RegisterPageState extends State<RegisterPage> {
           _emailController.text.isNotEmpty &&
           _passwordController.text.isNotEmpty;
     });
+  }
+
+  Future<void> _register() async {
+    try {
+      // Call the signup method from AuthService
+      final user = await _authService.signup(
+        _emailController.text.trim(),
+        _passwordController.text.trim(),
+      );
+
+      // If successful, navigate to the LoginPage
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Account created for ${user.email}')),
+      );
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginPage()),
+      );
+    } catch (e) {
+      // Show an error message if registration fails
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Registration failed: $e')),
+      );
+    }
   }
 
   @override
@@ -135,11 +161,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                   LoginButton(
                     text: 'Sign in',
-                    onPressed: _isButtonEnabled
-                        ? () {
-                            print('Sign in button pressed');
-                          }
-                        : null, // Disable the button if fields are empty
+                    onPressed: _isButtonEnabled ? _register : null, // Call _register
                   ),
                   const Center(
                     child: Text(
@@ -154,8 +176,32 @@ class _RegisterPageState extends State<RegisterPage> {
                   GoogleButton(
                     text: 'Continue with Google',
                     iconPath: 'lib/icons/icons8-google.svg',
-                    onPressed: () {
-                      print('Google button pressed');
+                    onPressed: () async {
+                      try {
+                        final user = await _authService.signInWithGoogle();
+                        if (user != null) {
+                          // Show success message
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Signed in as ${user.email}')),
+                          );
+
+                          // Navigate to the next page or perform additional actions
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(builder: (context) => const LoginPage()),
+                          );
+                        } else {
+                          // User canceled the sign-in
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Google Sign-In canceled')),
+                          );
+                        }
+                      } catch (e) {
+                        // Show error message
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Google Sign-In failed: $e')),
+                        );
+                      }
                     },
                   ),
                 ],
