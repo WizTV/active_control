@@ -78,7 +78,7 @@ class _RegisterPageState extends State<RegisterPage> {
         backgroundColor: const Color.fromRGBO(33, 52, 102, 1),
         appBar: AppBar(
           title: const Text(
-            'SIGN IN',
+            'ACTIVE CONTROL',
             style: TextStyle(
               color: Color.fromRGBO(255, 255, 255, 1),
               fontWeight: FontWeight.w800,

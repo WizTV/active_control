@@ -19,3 +19,16 @@ subprojects {
 tasks.register<Delete>("clean") {
     delete(rootProject.layout.buildDirectory)
 }
+
+// Ensure Java/Kotlin compile tasks use a modern Java version (11)
+// This avoids warnings about obsolete source/target = 8 from some plugins.
+tasks.withType<org.gradle.api.tasks.compile.JavaCompile>().configureEach {
+    sourceCompatibility = JavaVersion.VERSION_11.toString()
+    targetCompatibility = JavaVersion.VERSION_11.toString()
+    // Use --release for consistent bytecode and API surface
+    options.release.set(11)
+}
+
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    kotlinOptions.jvmTarget = JavaVersion.VERSION_11.toString()
+}

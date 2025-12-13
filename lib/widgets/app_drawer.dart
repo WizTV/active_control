@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../pages/register_page.dart';
+import '../pages/edit_training_page.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -28,10 +29,18 @@ class AppDrawer extends StatelessWidget {
             UserAccountsDrawerHeader(
               accountName: Text(firstName),
               accountEmail: Text(email ?? ''),
-              currentAccountPicture: CircleAvatar(
-                backgroundColor: const Color.fromRGBO(255, 255, 255, 0.9),
-                child: const Icon(Icons.fitness_center, color: Colors.blue),
-              ),
+              currentAccountPicture: (user != null && (user.photoURL != null && user.photoURL!.isNotEmpty))
+                  ? CircleAvatar(
+                      backgroundImage: NetworkImage(user.photoURL!),
+                      backgroundColor: Colors.transparent,
+                    )
+                  : CircleAvatar(
+                      backgroundColor: const Color.fromRGBO(255, 255, 255, 0.9),
+                      child: Text(
+                        firstName.isNotEmpty ? firstName[0].toUpperCase() : 'U',
+                        style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+                      ),
+                    ),
             ),
             ListTile(
               leading: const Icon(Icons.home),
@@ -46,7 +55,10 @@ class AppDrawer extends StatelessWidget {
               title: const Text('Edit training'),
               onTap: () {
                 Navigator.pop(context);
-                Navigator.pushNamed(context, '/edit-training');
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const EditTrainingPage()),
+                );
               },
             ),
             const Divider(),

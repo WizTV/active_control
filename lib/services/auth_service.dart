@@ -80,6 +80,14 @@ class AuthService {
   Future<void> logout() async {
     try {
       await _auth.signOut();
+      // Also sign out from GoogleSignIn to ensure the account chooser
+      // appears next time the user tries to sign in with Google.
+      try {
+        await _googleSignIn.signOut();
+      } catch (_) {}
+      try {
+        await _googleSignIn.disconnect();
+      } catch (_) {}
     } catch (e) {
       throw Exception('An error occurred during logout: $e');
     }
