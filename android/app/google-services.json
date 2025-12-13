@@ -14,6 +14,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "205218908282-24uvtieqltpu627tvbil1n5d1artlesd.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.activecontrol",
+            "certificate_hash": "cc32ce9328b04dce76c211460244266c017d5798"
+          }
+        },
+        {
           "client_id": "205218908282-p8ro5snnb675f5ducva59g1cb97icn2p.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {

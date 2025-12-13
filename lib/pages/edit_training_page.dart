@@ -25,9 +25,11 @@ class _EditTrainingPageState extends State<EditTrainingPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Edit Training'),
+        backgroundColor: theme.primaryColor,
       ),
       drawer: const AppDrawer(),
       body: SingleChildScrollView(
@@ -35,9 +37,9 @@ class _EditTrainingPageState extends State<EditTrainingPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text(
+            Text(
               'Training details',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+              style: theme.textTheme.titleLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             CustomTextField(
@@ -60,7 +62,6 @@ class _EditTrainingPageState extends State<EditTrainingPage> {
             LoginButton(
               text: 'Save',
               onPressed: () {
-                // For now just show a confirmation snackbar
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Training saved')),
                 );
@@ -69,6 +70,10 @@ class _EditTrainingPageState extends State<EditTrainingPage> {
             ),
             const SizedBox(height: 6),
             OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: Colors.white,
+                side: BorderSide(color: theme.colorScheme.secondary),
+              ),
               onPressed: () => Navigator.pop(context),
               child: const Text('Cancel'),
             ),

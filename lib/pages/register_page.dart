@@ -175,28 +175,22 @@ class _RegisterPageState extends State<RegisterPage> {
                     text: 'Continue with Google',
                     iconPath: 'lib/icons/icons8-google.svg',
                     onPressed: () async {
+                      final messenger = ScaffoldMessenger.of(context);
                       try {
                         final user = await _authService.signInWithGoogle();
                         if (user != null) {
-                          // Show success message
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Signed in as ${user.email}')),
+                          // Show success message and go to Home
+                          messenger.showSnackBar(
+                            SnackBar(content: Text('Signed in as ${user.displayName ?? user.email}')),
                           );
-
-                          // Navigate to the next page or perform additional actions
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(builder: (context) => const LoginPage()),
-                          );
+                          Navigator.pushReplacementNamed(context, '/home');
                         } else {
-                          // User canceled the sign-in
-                          ScaffoldMessenger.of(context).showSnackBar(
+                          messenger.showSnackBar(
                             const SnackBar(content: Text('Google Sign-In canceled')),
                           );
                         }
                       } catch (e) {
-                        // Show error message
-                        ScaffoldMessenger.of(context).showSnackBar(
+                        messenger.showSnackBar(
                           SnackBar(content: Text('Google Sign-In failed: $e')),
                         );
                       }

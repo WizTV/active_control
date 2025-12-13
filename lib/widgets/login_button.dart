@@ -19,7 +19,7 @@ class LoginButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.blue, // Set the background color to blue
+          backgroundColor: Theme.of(context).primaryColor, // Use app primary color
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(30),
           ),
@@ -27,7 +27,7 @@ class LoginButton extends StatelessWidget {
         child: Text(
           text,
           style: const TextStyle(
-            color: Colors.white, // Ensure the text color is white
+            color: Colors.white,
             fontSize: 22,
             fontWeight: FontWeight.bold,
           ),

@@ -125,6 +125,11 @@ class AuthService {
       // Obtain the Google Sign-In authentication details
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
 
+      // Make sure we have at least an idToken (required by Firebase on some platforms)
+      if (googleAuth.idToken == null && googleAuth.accessToken == null) {
+        throw Exception('Google authentication failed: no idToken or accessToken returned.\n'
+        'On Android ensure Play Services are available and your SHA keys are configured in Firebase.');
+      }
       // Create a new credential for Firebase
       final OAuthCredential credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
@@ -134,8 +139,17 @@ class AuthService {
       // Sign in to Firebase with the Google credential
       final UserCredential userCredential = await _auth.signInWithCredential(credential);
 
-      return userCredential.user;
+      // Reload user to ensure displayName and other fields are populated
+      try {
+        await userCredential.user?.reload();
+      } catch (_) {}
+
+      return _auth.currentUser;
     } catch (e) {
+      // Give more specific error messages when possible
+      if (e is FirebaseAuthException) {
+        throw Exception('FirebaseAuth error during Google Sign-In: ${e.message}');
+      }
       throw Exception('Google Sign-In failed: $e');
     }
   }

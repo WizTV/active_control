@@ -26,8 +26,34 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool loggedIn = AuthService().getCurrentUser() != null;
 
+    const primaryColor = Color.fromRGBO(33, 52, 102, 1);
+    const containerColor = Color.fromRGBO(28, 43, 84, 1);
+
+    final colorScheme = ColorScheme.fromSeed(seedColor: primaryColor).copyWith(
+      primary: primaryColor,
+      secondary: containerColor,
+    );
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        colorScheme: colorScheme,
+        primaryColor: primaryColor,
+        scaffoldBackgroundColor: primaryColor,
+        appBarTheme: const AppBarTheme(
+          backgroundColor: primaryColor,
+          foregroundColor: Colors.white,
+          elevation: 0,
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: primaryColor,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+            textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          ),
+        ),
+      ),
       home: loggedIn ? const HomePage() : const RegisterPage(),
       routes: {
         '/home': (context) => const HomePage(),
