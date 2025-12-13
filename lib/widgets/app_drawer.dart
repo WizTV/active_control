@@ -7,14 +7,27 @@ class AppDrawer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final user = AuthService().getCurrentUser();
+    String firstName = 'User';
+    String? email;
+    if (user != null) {
+      email = user.email;
+      final displayName = user.displayName ?? '';
+      if (displayName.trim().isNotEmpty) {
+        firstName = displayName.trim().split(' ').first;
+      } else if (email != null && email.isNotEmpty) {
+        firstName = email.split('@').first;
+      }
+    }
+
     return Drawer(
       child: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             UserAccountsDrawerHeader(
-              accountName: const Text('Active Control'),
-              accountEmail: const Text('user@example.com'),
+              accountName: Text(firstName),
+              accountEmail: Text(email ?? ''),
               currentAccountPicture: CircleAvatar(
                 backgroundColor: const Color.fromRGBO(255, 255, 255, 0.9),
                 child: const Icon(Icons.fitness_center, color: Colors.blue),

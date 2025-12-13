@@ -34,16 +34,14 @@ class _RegisterPageState extends State<RegisterPage> {
       final user = await _authService.signup(
         _emailController.text.trim(),
         _passwordController.text.trim(),
+        displayName: _nameController.text.trim(),
       );
 
       // If successful, navigate to the LoginPage
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Account created for ${user.email}')),
       );
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const LoginPage()),
-      );
+      Navigator.pushReplacementNamed(context, '/home');
     } catch (e) {
       // Show an error message if registration fails
       ScaffoldMessenger.of(context).showSnackBar(

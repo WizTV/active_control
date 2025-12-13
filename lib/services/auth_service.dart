@@ -6,7 +6,7 @@ class AuthService {
   final GoogleSignIn _googleSignIn = GoogleSignIn();
 
   // Sign up method
-  Future<User> signup(String email, String password) async {
+  Future<User> signup(String email, String password, {String? displayName}) async {
     try {
       final authCredential = await _auth.createUserWithEmailAndPassword(
         email: email,
@@ -14,8 +14,15 @@ class AuthService {
       );
 
       if (authCredential.user != null) {
-        // User is successfully signed up
-        return authCredential.user!;
+        // Optionally set display name
+        if (displayName != null && displayName.trim().isNotEmpty) {
+          try {
+            await authCredential.user!.updateDisplayName(displayName.trim());
+            await authCredential.user!.reload();
+          } catch (_) {}
+        }
+        // Return the current (possibly updated) user
+        return _auth.currentUser!;
       } else {
         throw Exception('Signup failed. User is null.');
       }
