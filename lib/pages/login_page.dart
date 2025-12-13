@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'register_page.dart'; // Import the RegisterPage
+import '../services/auth_service.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/login_button.dart';
 import '../widgets/google_button.dart';
@@ -16,6 +17,7 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _passwordController = TextEditingController();
 
   bool _isButtonEnabled = false;
+  bool _isLoading = false;
 
   void _updateButtonState() {
     setState(() {
@@ -115,10 +117,26 @@ class _LoginPageState extends State<LoginPage> {
                     controller: _passwordController,
                   ),
                   LoginButton(
-                    text: 'Log in',
+                    text: _isLoading ? 'Signing in...' : 'Log in',
                     onPressed: _isButtonEnabled
-                        ? () {
-                            print('Login button pressed');
+                        ? () async {
+                            FocusScope.of(context).unfocus();
+                            setState(() => _isLoading = true);
+                            final auth = AuthService();
+                            final navigator = Navigator.of(context);
+                            final messenger = ScaffoldMessenger.of(context);
+                            try {
+                              await auth.login(_emailController.text.trim(), _passwordController.text.trim());
+                              if (!mounted) return;
+                              navigator.pushReplacementNamed('/home');
+                            } catch (e) {
+                              if (!mounted) return;
+                              messenger.showSnackBar(
+                                SnackBar(content: Text(e.toString())),
+                              );
+                            } finally {
+                              if (mounted) setState(() => _isLoading = false);
+                            }
                           }
                         : null, // Disable the button if fields are empty
                   ),
@@ -152,8 +170,26 @@ class _LoginPageState extends State<LoginPage> {
                   GoogleButton(
                     text: 'Continue with Google',
                     iconPath: 'lib/icons/icons8-google.svg',
-                    onPressed: () {
-                      print('Google button pressed');
+                    onPressed: () async {
+                      FocusScope.of(context).unfocus();
+                      setState(() => _isLoading = true);
+                      final auth = AuthService();
+                      final navigator = Navigator.of(context);
+                      final messenger = ScaffoldMessenger.of(context);
+                      try {
+                        final user = await auth.signInWithGoogle();
+                        if (!mounted) return;
+                        if (user != null) {
+                          navigator.pushReplacementNamed('/home');
+                        }
+                      } catch (e) {
+                        if (!mounted) return;
+                        messenger.showSnackBar(
+                          SnackBar(content: Text(e.toString())),
+                        );
+                      } finally {
+                        if (mounted) setState(() => _isLoading = false);
+                      }
                     },
                   ),
                 ],
