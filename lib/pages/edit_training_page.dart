@@ -49,6 +49,9 @@ class _EditTrainingPageState extends State<EditTrainingPage> {
           }
         }
       }
+    } else {
+      // Start in edit mode for new trainings
+      _isEditMode = true;
     }
   }
 
