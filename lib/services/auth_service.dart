@@ -1,9 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'firestore_training_service.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final GoogleSignIn _googleSignIn = GoogleSignIn();
+  final FirestoreTrainingService _firestoreTrainingService = FirestoreTrainingService();
 
   // Sign up method
   Future<User> signup(String email, String password, {String? displayName}) async {
@@ -21,6 +23,10 @@ class AuthService {
             await authCredential.user!.reload();
           } catch (_) {}
         }
+        // Load trainings from Firestore after signup
+        try {
+          await _firestoreTrainingService.loadTrainings();
+        } catch (_) {}
         // Return the current (possibly updated) user
         return _auth.currentUser!;
       } else {
@@ -53,6 +59,10 @@ class AuthService {
       );
 
       if (authCredential.user != null) {
+        // Load trainings from Firestore after login
+        try {
+          await _firestoreTrainingService.loadTrainings();
+        } catch (_) {}
         // User is successfully logged in
         return authCredential.user!;
       } else {
@@ -79,6 +89,9 @@ class AuthService {
   // Logout method
   Future<void> logout() async {
     try {
+      // Clear trainings from local storage
+      await _firestoreTrainingService.clearTrainings();
+      
       await _auth.signOut();
       // Also sign out from GoogleSignIn to ensure the account chooser
       // appears next time the user tries to sign in with Google.
@@ -150,6 +163,11 @@ class AuthService {
       // Reload user to ensure displayName and other fields are populated
       try {
         await userCredential.user?.reload();
+      } catch (_) {}
+
+      // Load trainings from Firestore after Google Sign-In
+      try {
+        await _firestoreTrainingService.loadTrainings();
       } catch (_) {}
 
       return _auth.currentUser;

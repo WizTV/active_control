@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../widgets/app_drawer.dart';
 import '../widgets/custom_text_field.dart';
 import '../services/training_service.dart';
+import '../services/firestore_training_service.dart';
 
 class EditTrainingPage extends StatefulWidget {
   final int? trainingId;
@@ -15,6 +16,7 @@ class _EditTrainingPageState extends State<EditTrainingPage> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _durationController = TextEditingController();
+  final FirestoreTrainingService _firestoreService = FirestoreTrainingService();
 
   bool _isNew = true;
 
@@ -89,17 +91,31 @@ class _EditTrainingPageState extends State<EditTrainingPage> {
                     return;
                   }
                   if (_isNew) {
-                    final newId = TrainingService.instance.addTraining(title: title, description: description, durationMinutes: duration);
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Training created')));
-                    // Open the same page for the newly created training so exercises can be added
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => EditTrainingPage(trainingId: newId)),
-                    );
+                    _firestoreService.addTraining(title: title, description: description, durationMinutes: duration).then((newId) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Training created')));
+                        // Open the same page for the newly created training so exercises can be added
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (context) => EditTrainingPage(trainingId: int.parse(newId))),
+                        );
+                      }
+                    }).catchError((e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error creating training: $e')));
+                      }
+                    });
                     return;
                   } else {
-                    TrainingService.instance.updateTraining(widget.trainingId!, title: title, description: description, durationMinutes: duration);
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Training saved')));
+                    _firestoreService.updateTraining(widget.trainingId!, title: title, description: description, durationMinutes: duration).then((_) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Training saved')));
+                      }
+                    }).catchError((e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error saving training: $e')));
+                      }
+                    });
                     // stay on the page so user can manage exercises
                   }
                 },
@@ -169,7 +185,13 @@ class _EditTrainingPageState extends State<EditTrainingPage> {
                                       ),
                                     );
                                     if (confirm == true) {
-                                      TrainingService.instance.deleteExercise(widget.trainingId!, ex.id);
+                                      try {
+                                        await _firestoreService.deleteExercise(widget.trainingId!, ex.id);
+                                      } catch (e) {
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error deleting exercise: $e')));
+                                        }
+                                      }
                                     }
                                   },
                                 ),
@@ -229,11 +251,26 @@ class _EditTrainingPageState extends State<EditTrainingPage> {
               final weight = double.tryParse(weightCtrl.text.trim()) ?? 0.0;
               if (name.isEmpty) return; // keep dialog open
               if (isEdit) {
-                TrainingService.instance.updateExercise(trainingId, exercise.id, name: name, sets: sets, reps: reps, weight: weight);
+                _firestoreService.updateExercise(trainingId, exercise.id, name: name, sets: sets, reps: reps, weight: weight).then((_) {
+                  if (context.mounted) {
+                    Navigator.pop(context, true);
+                  }
+                }).catchError((e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error updating exercise: $e')));
+                  }
+                });
               } else {
-                TrainingService.instance.addExercise(trainingId, name: name, sets: sets, reps: reps, weight: weight);
+                _firestoreService.addExercise(trainingId, name: name, sets: sets, reps: reps, weight: weight).then((_) {
+                  if (context.mounted) {
+                    Navigator.pop(context, true);
+                  }
+                }).catchError((e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error adding exercise: $e')));
+                  }
+                });
               }
-              Navigator.pop(context, true);
             },
             child: Text(isEdit ? 'Save' : 'Add'),
           ),

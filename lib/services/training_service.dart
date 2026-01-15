@@ -27,6 +27,12 @@ class TrainingService {
 
   List<Training> getAll() => trainings.value;
 
+  int getNextId() => _nextId;
+
+  void setNextId(int value) => _nextId = value;
+
+  void resetNextId() => _nextId = 1;
+
   Training? getById(int id) {
     for (final t in trainings.value) {
       if (t.id == id) return t;

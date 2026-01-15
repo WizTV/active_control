@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../widgets/app_drawer.dart';
 import '../services/training_service.dart';
+import '../services/firestore_training_service.dart';
 import 'edit_training_page.dart';
 
 class HomePage extends StatelessWidget {
@@ -85,7 +86,15 @@ class HomePage extends StatelessWidget {
                                     ),
                                   );
                                   if (confirm == true) {
-                                    TrainingService.instance.deleteTraining(t.id);
+                                    try {
+                                      await FirestoreTrainingService().deleteTraining(t.id);
+                                    } catch (e) {
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(content: Text('Error deleting training: $e')),
+                                        );
+                                      }
+                                    }
                                   }
                                 },
                               ),

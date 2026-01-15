@@ -38,12 +38,14 @@ class _RegisterPageState extends State<RegisterPage> {
       );
 
       // If successful, navigate to the LoginPage
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Account created for ${user.email}')),
       );
       Navigator.pushReplacementNamed(context, '/home');
     } catch (e) {
       // Show an error message if registration fails
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Registration failed: $e')),
       );
@@ -175,21 +177,24 @@ class _RegisterPageState extends State<RegisterPage> {
                     text: 'Continue with Google',
                     iconPath: 'lib/icons/icons8-google.svg',
                     onPressed: () async {
+                      final navigator = Navigator.of(context);
                       final messenger = ScaffoldMessenger.of(context);
                       try {
                         final user = await _authService.signInWithGoogle();
+                        if (!mounted) return;
                         if (user != null) {
                           // Show success message and go to Home
                           messenger.showSnackBar(
                             SnackBar(content: Text('Signed in as ${user.displayName ?? user.email}')),
                           );
-                          Navigator.pushReplacementNamed(context, '/home');
+                          navigator.pushReplacementNamed('/home');
                         } else {
                           messenger.showSnackBar(
                             const SnackBar(content: Text('Google Sign-In canceled')),
                           );
                         }
                       } catch (e) {
+                        if (!mounted) return;
                         messenger.showSnackBar(
                           SnackBar(content: Text('Google Sign-In failed: $e')),
                         );
