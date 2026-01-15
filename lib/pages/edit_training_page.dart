@@ -19,7 +19,9 @@ class _EditTrainingPageState extends State<EditTrainingPage> {
   final FirestoreTrainingService _firestoreService = FirestoreTrainingService();
 
   bool _isNew = true;
+  bool _isEditMode = false;
   final List<Map<String, dynamic>> _pendingExercises = [];
+  final Set<String> _completedExercises = {};
 
   @override
   void dispose() {
@@ -40,6 +42,12 @@ class _EditTrainingPageState extends State<EditTrainingPage> {
         _titleController.text = t.title;
         _descriptionController.text = t.description;
         _durationController.text = t.durationMinutes.toString();
+        // Load completed exercises
+        for (final ex in t.exercises) {
+          if (ex.completed) {
+            _completedExercises.add(ex.id.toString());
+          }
+        }
       }
     }
   }
@@ -58,27 +66,73 @@ class _EditTrainingPageState extends State<EditTrainingPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              'Training details',
-              style: theme.textTheme.titleLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Training details',
+                  style: theme.textTheme.titleLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+                ),
+                Row(
+                  children: [
+                    Text(
+                      _isEditMode ? 'Edit' : 'View',
+                      style: const TextStyle(color: Colors.white, fontSize: 14),
+                    ),
+                    const SizedBox(width: 8),
+                    Switch(
+                      value: _isEditMode,
+                      onChanged: (value) {
+                        setState(() {
+                          _isEditMode = value;
+                        });
+                      },
+                      activeThumbColor: Colors.blue,
+                      inactiveThumbColor: Colors.grey,
+                    ),
+                  ],
+                ),
+              ],
             ),
             const SizedBox(height: 12),
-            CustomTextField(
-              hintText: 'Title',
-              icon: Icons.title,
-              controller: _titleController,
-            ),
-            CustomTextField(
-              hintText: 'Description',
-              icon: Icons.description,
-              controller: _descriptionController,
-            ),
-            CustomTextField(
-              hintText: 'Duration (min)',
-              icon: Icons.timer,
-              keyboardType: TextInputType.number,
-              controller: _durationController,
-            ),
+            if (_isEditMode) ...[
+              CustomTextField(
+                hintText: 'Title',
+                icon: Icons.title,
+                controller: _titleController,
+              ),
+              CustomTextField(
+                hintText: 'Description',
+                icon: Icons.description,
+                controller: _descriptionController,
+              ),
+              CustomTextField(
+                hintText: 'Duration (min)',
+                icon: Icons.timer,
+                keyboardType: TextInputType.number,
+                controller: _durationController,
+              ),
+            ] else ...[
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white10,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Title: ${_titleController.text}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                    const SizedBox(height: 8),
+                    if (_descriptionController.text.isNotEmpty) ...[
+                      Text('Description: ${_descriptionController.text}', style: const TextStyle(color: Colors.white70)),
+                      const SizedBox(height: 8),
+                    ],
+                    Text('Duration: ${_durationController.text} min', style: const TextStyle(color: Colors.white70)),
+                  ],
+                ),
+              ),
+            ],
             const SizedBox(height: 20),
             Text('Exercises', style: theme.textTheme.titleMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
@@ -95,9 +149,50 @@ class _EditTrainingPageState extends State<EditTrainingPage> {
                       Card(
                         color: Colors.white10,
                         child: ListTile(
-                          title: Text(ex.name, style: const TextStyle(color: Colors.white)),
-                          subtitle: Text('Sets: ${ex.sets} • Reps: ${ex.reps} • Weight: ${ex.weight}', style: const TextStyle(color: Colors.white70)),
-                          trailing: Row(
+                          leading: _isEditMode ? null : Checkbox(
+                            value: _completedExercises.contains(ex.id.toString()),
+                            onChanged: (value) async {
+                              setState(() {
+                                if (value == true) {
+                                  _completedExercises.add(ex.id.toString());
+                                } else {
+                                  _completedExercises.remove(ex.id.toString());
+                                }
+                              });
+                              // Save to database
+                              try {
+                                await _firestoreService.updateExercise(
+                                  widget.trainingId!,
+                                  ex.id,
+                                  name: ex.name,
+                                  sets: ex.sets,
+                                  reps: ex.reps,
+                                  weight: ex.weight,
+                                  completed: value ?? false,
+                                );
+                              } catch (e) {
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Error updating exercise: $e')),
+                                  );
+                                }
+                              }
+                            },
+                          ),
+                          title: Text(
+                            ex.name,
+                            style: TextStyle(
+                              color: _completedExercises.contains(ex.id.toString()) ? Colors.white38 : Colors.white,
+                              decoration: _completedExercises.contains(ex.id.toString()) ? TextDecoration.lineThrough : null,
+                            ),
+                          ),
+                          subtitle: Text(
+                            'Sets: ${ex.sets} • Reps: ${ex.reps} • Weight: ${ex.weight}',
+                            style: TextStyle(
+                              color: _completedExercises.contains(ex.id.toString()) ? Colors.white30 : Colors.white70,
+                            ),
+                          ),
+                          trailing: _isEditMode ? Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               IconButton(
@@ -130,141 +225,146 @@ class _EditTrainingPageState extends State<EditTrainingPage> {
                                 },
                               ),
                             ],
+                          ) : null,
+                        ),
+                      ),
+                    // Show pending exercises (not yet saved) - only in edit mode
+                    if (_isEditMode)
+                      for (var i = 0; i < _pendingExercises.length; i++)
+                        Card(
+                          color: Colors.white10,
+                          child: ListTile(
+                            title: Text(_pendingExercises[i]['name'] as String, style: const TextStyle(color: Colors.white)),
+                            subtitle: Text('Sets: ${_pendingExercises[i]['sets']} • Reps: ${_pendingExercises[i]['reps']} • Weight: ${_pendingExercises[i]['weight']}', style: const TextStyle(color: Colors.white70)),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.edit, color: Colors.white70),
+                                  onPressed: () => _showExerciseDialog(context, pendingIndex: i),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.delete, color: Colors.redAccent),
+                                  onPressed: () {
+                                    setState(() {
+                                      _pendingExercises.removeAt(i);
+                                    });
+                                  },
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                    if (_isEditMode) ...[
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () => _showExerciseDialog(context),
+                          icon: const Icon(Icons.add),
+                          label: const Text('Add exercise'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white24,
+                            foregroundColor: Colors.white,
                           ),
                         ),
                       ),
-                    // Show pending exercises (not yet saved)
-                    for (var i = 0; i < _pendingExercises.length; i++)
-                      Card(
-                        color: Colors.white10,
-                        child: ListTile(
-                          title: Text(_pendingExercises[i]['name'] as String, style: const TextStyle(color: Colors.white)),
-                          subtitle: Text('Sets: ${_pendingExercises[i]['sets']} • Reps: ${_pendingExercises[i]['reps']} • Weight: ${_pendingExercises[i]['weight']}', style: const TextStyle(color: Colors.white70)),
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              IconButton(
-                                icon: const Icon(Icons.edit, color: Colors.white70),
-                                onPressed: () => _showExerciseDialog(context, pendingIndex: i),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.delete, color: Colors.redAccent),
-                                onPressed: () {
-                                  setState(() {
-                                    _pendingExercises.removeAt(i);
-                                  });
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    const SizedBox(height: 8),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: () => _showExerciseDialog(context),
-                        icon: const Icon(Icons.add),
-                        label: const Text('Add exercise'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white24,
-                          foregroundColor: Colors.white,
-                        ),
-                      ),
-                    ),
+                    ],
                   ],
                 );
               },
             ),
-            const SizedBox(height: 20),
-            SizedBox(
-              height: 60,
-              child: ElevatedButton(
-                onPressed: () {
-                  final title = _titleController.text.trim();
-                  final description = _descriptionController.text.trim();
-                  final duration = int.tryParse(_durationController.text.trim()) ?? 0;
-                  if (title.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter a title')));
-                    return;
-                  }
-                  if (_isNew) {
-                    _firestoreService.addTraining(title: title, description: description, durationMinutes: duration).then((newId) async {
-                      // Add all pending exercises
-                      for (final exercise in _pendingExercises) {
-                        try {
-                          await _firestoreService.addExercise(
-                            int.parse(newId),
-                            name: exercise['name'] as String,
-                            sets: exercise['sets'] as int,
-                            reps: exercise['reps'] as int,
-                            weight: exercise['weight'] as double,
-                          );
-                        } catch (e) {
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error adding exercise: $e')));
+            if (_isEditMode) ...[
+              const SizedBox(height: 20),
+              SizedBox(
+                height: 60,
+                child: ElevatedButton(
+                  onPressed: () {
+                    final title = _titleController.text.trim();
+                    final description = _descriptionController.text.trim();
+                    final duration = int.tryParse(_durationController.text.trim()) ?? 0;
+                    if (title.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter a title')));
+                      return;
+                    }
+                    if (_isNew) {
+                      _firestoreService.addTraining(title: title, description: description, durationMinutes: duration).then((newId) async {
+                        // Add all pending exercises
+                        for (final exercise in _pendingExercises) {
+                          try {
+                            await _firestoreService.addExercise(
+                              int.parse(newId),
+                              name: exercise['name'] as String,
+                              sets: exercise['sets'] as int,
+                              reps: exercise['reps'] as int,
+                              weight: exercise['weight'] as double,
+                            );
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error adding exercise: $e')));
+                            }
                           }
                         }
-                      }
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Training created')));
-                        Navigator.pushReplacementNamed(context, '/home');
-                      }
-                    }).catchError((e) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error creating training: $e')));
-                      }
-                    });
-                  } else {
-                    _firestoreService.updateTraining(widget.trainingId!, title: title, description: description, durationMinutes: duration).then((_) async {
-                      // Add all pending exercises
-                      for (final exercise in _pendingExercises) {
-                        try {
-                          await _firestoreService.addExercise(
-                            widget.trainingId!,
-                            name: exercise['name'] as String,
-                            sets: exercise['sets'] as int,
-                            reps: exercise['reps'] as int,
-                            weight: exercise['weight'] as double,
-                          );
-                        } catch (e) {
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error adding exercise: $e')));
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Training created')));
+                          Navigator.pushReplacementNamed(context, '/home');
+                        }
+                      }).catchError((e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error creating training: $e')));
+                        }
+                      });
+                    } else {
+                      _firestoreService.updateTraining(widget.trainingId!, title: title, description: description, durationMinutes: duration).then((_) async {
+                        // Add all pending exercises
+                        for (final exercise in _pendingExercises) {
+                          try {
+                            await _firestoreService.addExercise(
+                              widget.trainingId!,
+                              name: exercise['name'] as String,
+                              sets: exercise['sets'] as int,
+                              reps: exercise['reps'] as int,
+                              weight: exercise['weight'] as double,
+                            );
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error adding exercise: $e')));
+                            }
                           }
                         }
-                      }
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Training saved')));
-                        Navigator.pushReplacementNamed(context, '/home');
-                      }
-                    }).catchError((e) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error saving training: $e')));
-                      }
-                    });
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFAAC2FF),
-                  foregroundColor: const Color(0xFF213466),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Training saved')));
+                          Navigator.pushReplacementNamed(context, '/home');
+                        }
+                      }).catchError((e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error saving training: $e')));
+                        }
+                      });
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFAAC2FF),
+                    foregroundColor: const Color(0xFF213466),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                  ),
+                  child: const Text('Save', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF213466))),
                 ),
-                child: const Text('Save', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF213466))),
               ),
-            ),
-            const SizedBox(height: 6),
-            SizedBox(
-              height: 56,
-              child: OutlinedButton(
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: Colors.redAccent,
-                  side: const BorderSide(color: Colors.redAccent),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+              const SizedBox(height: 6),
+              SizedBox(
+                height: 56,
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.redAccent,
+                    side: const BorderSide(color: Colors.redAccent),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                  ),
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                 ),
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
               ),
-            ),
+            ]
           ],
         ),
       ),

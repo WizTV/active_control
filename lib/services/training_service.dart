@@ -106,6 +106,7 @@ class Exercise {
   int sets;
   int reps;
   double weight;
+  bool completed;
 
-  Exercise({required this.id, required this.name, required this.sets, required this.reps, required this.weight});
+  Exercise({required this.id, required this.name, required this.sets, required this.reps, required this.weight, this.completed = false});
 }

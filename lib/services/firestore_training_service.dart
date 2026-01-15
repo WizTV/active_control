@@ -31,6 +31,7 @@ class FirestoreTrainingService {
                       sets: (e['sets'] as num).toInt(),
                       reps: (e['reps'] as num).toInt(),
                       weight: (e['weight'] as num).toDouble(),
+                      completed: e['completed'] as bool? ?? false,
                     ))
                 .toList() ??
             [];
@@ -192,23 +193,42 @@ class FirestoreTrainingService {
     required int sets,
     required int reps,
     required double weight,
+    bool completed = false,
   }) async {
     try {
       final user = _auth.currentUser;
       if (user == null) throw Exception('User not authenticated');
 
       // Update locally
-      TrainingService.instance.updateExercise(
-        trainingId,
-        exerciseId,
-        name: name,
-        sets: sets,
-        reps: reps,
-        weight: weight,
-      );
-
       final training = TrainingService.instance.getById(trainingId);
-      if (training == null) throw Exception('Training not found');
+      if (training != null) {
+        final updatedExercises = training.exercises.map((e) {
+          if (e.id == exerciseId) {
+            e.completed = completed;
+            e.name = name;
+            e.sets = sets;
+            e.reps = reps;
+            e.weight = weight;
+          }
+          return e;
+        }).toList();
+        
+        TrainingService.instance.trainings.value = TrainingService.instance.trainings.value.map((t) {
+          if (t.id == trainingId) {
+            return Training(
+              id: t.id,
+              title: t.title,
+              description: t.description,
+              durationMinutes: t.durationMinutes,
+              exercises: updatedExercises,
+            );
+          }
+          return t;
+        }).toList();
+      }
+
+      final updatedTraining = TrainingService.instance.getById(trainingId);
+      if (updatedTraining == null) throw Exception('Training not found');
 
       // Update in Firestore
       await _firestore
@@ -216,7 +236,7 @@ class FirestoreTrainingService {
           .doc(user.uid)
           .collection('trainings')
           .doc(trainingId.toString())
-          .update(_trainingToJson(training));
+          .update(_trainingToJson(updatedTraining));
     } catch (e) {
       rethrow;
     }
@@ -266,6 +286,7 @@ class FirestoreTrainingService {
                 'sets': e.sets,
                 'reps': e.reps,
                 'weight': e.weight,
+                'completed': e.completed,
               })
           .toList(),
     };

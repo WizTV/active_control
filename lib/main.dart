@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'pages/login_page.dart';
 import 'pages/register_page.dart';
 import 'services/auth_service.dart';
+import 'services/firestore_training_service.dart';
 import 'pages/home_page.dart';
 import 'pages/edit_training_page.dart';
 import 'pages/settings_page.dart';
@@ -21,8 +22,25 @@ void main() async {
   runApp(const MyApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  late Future<void> _loadTrainingsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    final bool loggedIn = AuthService().getCurrentUser() != null;
+    // Load trainings from Firestore if user is logged in
+    _loadTrainingsFuture = loggedIn
+        ? FirestoreTrainingService().loadTrainings()
+        : Future.value();
+  }
 
   @override
   Widget build(BuildContext context) {
