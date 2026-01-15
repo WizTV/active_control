@@ -30,16 +30,14 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  late Future<void> _loadTrainingsFuture;
-
   @override
   void initState() {
     super.initState();
     final bool loggedIn = AuthService().getCurrentUser() != null;
     // Load trainings from Firestore if user is logged in
-    _loadTrainingsFuture = loggedIn
-        ? FirestoreTrainingService().loadTrainings()
-        : Future.value();
+    if (loggedIn) {
+      FirestoreTrainingService().loadTrainings();
+    }
   }
 
   @override
