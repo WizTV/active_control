@@ -142,8 +142,62 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   Center(
                     child: GestureDetector(
-                      onTap: () {
-                        // Add navigation logic here for the "Forgot password?" page
+                      onTap: () async {
+                        final email = _emailController.text.trim();
+                        if (email.isEmpty) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Please enter your email address')),
+                          );
+                          return;
+                        }
+                        
+                        final messenger = ScaffoldMessenger.of(context);
+                        
+                        final confirm = await showDialog<bool>(
+                          context: context,
+                          builder: (BuildContext dialogContext) {
+                            return AlertDialog(
+                              title: const Text('Reset Password'),
+                              content: Text(
+                                'Send a password reset email to $email?',
+                              ),
+                              actions: <Widget>[
+                                TextButton(
+                                  child: const Text('Cancel'),
+                                  onPressed: () {
+                                    Navigator.of(dialogContext).pop(false);
+                                  },
+                                ),
+                                TextButton(
+                                  child: const Text('Send Email'),
+                                  onPressed: () {
+                                    Navigator.of(dialogContext).pop(true);
+                                  },
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                        
+                        if (confirm == true && mounted) {
+                          try {
+                            final auth = AuthService();
+                            await auth.resetPassword(email);
+                            if (mounted) {
+                              messenger.showSnackBar(
+                                const SnackBar(
+                                  content: Text('Password reset email sent. Check your inbox and spam folder.'),
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            if (mounted) {
+                              messenger.showSnackBar(
+                                SnackBar(content: Text('Error: $e')),
+                              );
+                            }
+                          }
+                        }
                       },
                       child: const Text(
                         'Forgot password?',

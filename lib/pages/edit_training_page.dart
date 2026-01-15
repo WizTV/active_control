@@ -19,6 +19,7 @@ class _EditTrainingPageState extends State<EditTrainingPage> {
   final FirestoreTrainingService _firestoreService = FirestoreTrainingService();
 
   bool _isNew = true;
+  final List<Map<String, dynamic>> _pendingExercises = [];
 
   @override
   void dispose() {
@@ -78,7 +79,104 @@ class _EditTrainingPageState extends State<EditTrainingPage> {
               keyboardType: TextInputType.number,
               controller: _durationController,
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 20),
+            Text('Exercises', style: theme.textTheme.titleMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 8),
+            ValueListenableBuilder<List<Training>>(
+              valueListenable: TrainingService.instance.trainings,
+              builder: (context, list, _) {
+                final t = _isNew ? null : TrainingService.instance.getById(widget.trainingId!);
+                final savedExercises = t?.exercises ?? [];
+                
+                return Column(
+                  children: [
+                    // Show saved exercises
+                    for (final ex in savedExercises)
+                      Card(
+                        color: Colors.white10,
+                        child: ListTile(
+                          title: Text(ex.name, style: const TextStyle(color: Colors.white)),
+                          subtitle: Text('Sets: ${ex.sets} • Reps: ${ex.reps} • Weight: ${ex.weight}', style: const TextStyle(color: Colors.white70)),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.edit, color: Colors.white70),
+                                onPressed: () => _showExerciseDialog(context, exercise: ex),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.delete, color: Colors.redAccent),
+                                onPressed: () async {
+                                  final confirm = await showDialog<bool>(
+                                    context: context,
+                                    builder: (context) => AlertDialog(
+                                      title: const Text('Delete exercise?'),
+                                      content: const Text('Are you sure you want to delete this exercise?'),
+                                      actions: [
+                                        TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+                                        TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete', style: TextStyle(color: Colors.red))),
+                                      ],
+                                    ),
+                                  );
+                                  if (confirm == true) {
+                                    try {
+                                      await _firestoreService.deleteExercise(widget.trainingId!, ex.id);
+                                    } catch (e) {
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error deleting exercise: $e')));
+                                      }
+                                    }
+                                  }
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    // Show pending exercises (not yet saved)
+                    for (var i = 0; i < _pendingExercises.length; i++)
+                      Card(
+                        color: Colors.white10,
+                        child: ListTile(
+                          title: Text(_pendingExercises[i]['name'] as String, style: const TextStyle(color: Colors.white)),
+                          subtitle: Text('Sets: ${_pendingExercises[i]['sets']} • Reps: ${_pendingExercises[i]['reps']} • Weight: ${_pendingExercises[i]['weight']}', style: const TextStyle(color: Colors.white70)),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.edit, color: Colors.white70),
+                                onPressed: () => _showExerciseDialog(context, pendingIndex: i),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.delete, color: Colors.redAccent),
+                                onPressed: () {
+                                  setState(() {
+                                    _pendingExercises.removeAt(i);
+                                  });
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () => _showExerciseDialog(context),
+                        icon: const Icon(Icons.add),
+                        label: const Text('Add exercise'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white24,
+                          foregroundColor: Colors.white,
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+            const SizedBox(height: 20),
             SizedBox(
               height: 60,
               child: ElevatedButton(
@@ -91,37 +189,64 @@ class _EditTrainingPageState extends State<EditTrainingPage> {
                     return;
                   }
                   if (_isNew) {
-                    _firestoreService.addTraining(title: title, description: description, durationMinutes: duration).then((newId) {
+                    _firestoreService.addTraining(title: title, description: description, durationMinutes: duration).then((newId) async {
+                      // Add all pending exercises
+                      for (final exercise in _pendingExercises) {
+                        try {
+                          await _firestoreService.addExercise(
+                            int.parse(newId),
+                            name: exercise['name'] as String,
+                            sets: exercise['sets'] as int,
+                            reps: exercise['reps'] as int,
+                            weight: exercise['weight'] as double,
+                          );
+                        } catch (e) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error adding exercise: $e')));
+                          }
+                        }
+                      }
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Training created')));
-                        // Open the same page for the newly created training so exercises can be added
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (context) => EditTrainingPage(trainingId: int.parse(newId))),
-                        );
+                        Navigator.pushReplacementNamed(context, '/home');
                       }
                     }).catchError((e) {
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error creating training: $e')));
                       }
                     });
-                    return;
                   } else {
-                    _firestoreService.updateTraining(widget.trainingId!, title: title, description: description, durationMinutes: duration).then((_) {
+                    _firestoreService.updateTraining(widget.trainingId!, title: title, description: description, durationMinutes: duration).then((_) async {
+                      // Add all pending exercises
+                      for (final exercise in _pendingExercises) {
+                        try {
+                          await _firestoreService.addExercise(
+                            widget.trainingId!,
+                            name: exercise['name'] as String,
+                            sets: exercise['sets'] as int,
+                            reps: exercise['reps'] as int,
+                            weight: exercise['weight'] as double,
+                          );
+                        } catch (e) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error adding exercise: $e')));
+                          }
+                        }
+                      }
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Training saved')));
+                        Navigator.pushReplacementNamed(context, '/home');
                       }
                     }).catchError((e) {
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error saving training: $e')));
                       }
                     });
-                    // stay on the page so user can manage exercises
                   }
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFAAC2FF), // requested save color
-                  foregroundColor: const Color(0xFF213466), // darker text for contrast
+                  backgroundColor: const Color(0xFFAAC2FF),
+                  foregroundColor: const Color(0xFF213466),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                 ),
                 child: const Text('Save', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF213466))),
@@ -140,92 +265,22 @@ class _EditTrainingPageState extends State<EditTrainingPage> {
                 child: const Text('Cancel', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
               ),
             ),
-
-            const SizedBox(height: 20),
-            Text('Exercises', style: theme.textTheme.titleMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            if (_isNew)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8.0),
-                child: Text('Save the training first to add exercises.', style: theme.textTheme.bodyMedium?.copyWith(color: Colors.white70)),
-              )
-            else
-              ValueListenableBuilder<List<Training>>(
-                valueListenable: TrainingService.instance.trainings,
-                builder: (context, list, _) {
-                  final t = TrainingService.instance.getById(widget.trainingId!);
-                  final exercises = t?.exercises ?? [];
-                  return Column(
-                    children: [
-                      for (final ex in exercises)
-                        Card(
-                          color: Colors.white10,
-                          child: ListTile(
-                            title: Text(ex.name, style: const TextStyle(color: Colors.white)),
-                            subtitle: Text('Sets: ${ex.sets} • Reps: ${ex.reps} • Weight: ${ex.weight}', style: const TextStyle(color: Colors.white70)),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  icon: const Icon(Icons.edit, color: Colors.white70),
-                                  onPressed: () => _showExerciseDialog(context, trainingId: widget.trainingId!, exercise: ex),
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.delete, color: Colors.redAccent),
-                                  onPressed: () async {
-                                    final confirm = await showDialog<bool>(
-                                      context: context,
-                                      builder: (context) => AlertDialog(
-                                        title: const Text('Delete exercise?'),
-                                        content: const Text('Are you sure you want to delete this exercise?'),
-                                        actions: [
-                                          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-                                          TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete', style: TextStyle(color: Colors.red))),
-                                        ],
-                                      ),
-                                    );
-                                    if (confirm == true) {
-                                      try {
-                                        await _firestoreService.deleteExercise(widget.trainingId!, ex.id);
-                                      } catch (e) {
-                                        if (context.mounted) {
-                                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error deleting exercise: $e')));
-                                        }
-                                      }
-                                    }
-                                  },
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      const SizedBox(height: 8),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          onPressed: () => _showExerciseDialog(context, trainingId: widget.trainingId!),
-                          icon: const Icon(Icons.add),
-                          label: const Text('Add exercise'),
-                          style: ElevatedButton.styleFrom(backgroundColor: Colors.white24, foregroundColor: Colors.white),
-                        ),
-                      ),
-                    ],
-                  );
-                },
-              ),
           ],
         ),
       ),
     );
   }
 
-  Future<void> _showExerciseDialog(BuildContext context, {required int trainingId, Exercise? exercise}) async {
-    final nameCtrl = TextEditingController(text: exercise?.name ?? '');
-    final setsCtrl = TextEditingController(text: exercise != null ? exercise.sets.toString() : '3');
-    final repsCtrl = TextEditingController(text: exercise != null ? exercise.reps.toString() : '8');
-    final weightCtrl = TextEditingController(text: exercise != null ? exercise.weight.toString() : '0');
+  Future<void> _showExerciseDialog(BuildContext context, {Exercise? exercise, int? pendingIndex}) async {
+    final isPendingEdit = pendingIndex != null;
+    final pendingExercise = isPendingEdit ? _pendingExercises[pendingIndex] : null;
+    
+    final nameCtrl = TextEditingController(text: exercise?.name ?? pendingExercise?['name'] ?? '');
+    final setsCtrl = TextEditingController(text: exercise?.sets.toString() ?? pendingExercise?['sets']?.toString() ?? '3');
+    final repsCtrl = TextEditingController(text: exercise?.reps.toString() ?? pendingExercise?['reps']?.toString() ?? '8');
+    final weightCtrl = TextEditingController(text: exercise?.weight.toString() ?? pendingExercise?['weight']?.toString() ?? '0');
 
-    final isEdit = exercise != null;
+    final isEdit = exercise != null || isPendingEdit;
 
     final result = await showDialog<bool>(
       context: context,
@@ -250,8 +305,10 @@ class _EditTrainingPageState extends State<EditTrainingPage> {
               final reps = int.tryParse(repsCtrl.text.trim()) ?? 0;
               final weight = double.tryParse(weightCtrl.text.trim()) ?? 0.0;
               if (name.isEmpty) return; // keep dialog open
-              if (isEdit) {
-                _firestoreService.updateExercise(trainingId, exercise.id, name: name, sets: sets, reps: reps, weight: weight).then((_) {
+              
+              if (exercise != null) {
+                // Editing a saved exercise
+                _firestoreService.updateExercise(widget.trainingId!, exercise.id, name: name, sets: sets, reps: reps, weight: weight).then((_) {
                   if (context.mounted) {
                     Navigator.pop(context, true);
                   }
@@ -260,8 +317,20 @@ class _EditTrainingPageState extends State<EditTrainingPage> {
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error updating exercise: $e')));
                   }
                 });
-              } else {
-                _firestoreService.addExercise(trainingId, name: name, sets: sets, reps: reps, weight: weight).then((_) {
+              } else if (isPendingEdit) {
+                // Editing a pending exercise
+                setState(() {
+                  _pendingExercises[pendingIndex] = {
+                    'name': name,
+                    'sets': sets,
+                    'reps': reps,
+                    'weight': weight,
+                  };
+                });
+                Navigator.pop(context, true);
+              } else if (!_isNew && widget.trainingId != null) {
+                // Adding to an existing training
+                _firestoreService.addExercise(widget.trainingId!, name: name, sets: sets, reps: reps, weight: weight).then((_) {
                   if (context.mounted) {
                     Navigator.pop(context, true);
                   }
@@ -270,6 +339,17 @@ class _EditTrainingPageState extends State<EditTrainingPage> {
                     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error adding exercise: $e')));
                   }
                 });
+              } else {
+                // Adding to pending (new training)
+                setState(() {
+                  _pendingExercises.add({
+                    'name': name,
+                    'sets': sets,
+                    'reps': reps,
+                    'weight': weight,
+                  });
+                });
+                Navigator.pop(context, true);
               }
             },
             child: Text(isEdit ? 'Save' : 'Add'),

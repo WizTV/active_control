@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../pages/register_page.dart';
-import '../pages/edit_training_page.dart';
+import '../pages/settings_page.dart';
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -50,22 +50,17 @@ class AppDrawer extends StatelessWidget {
                 Navigator.pushReplacementNamed(context, '/home');
               },
             ),
-            ListTile(
-              leading: const Icon(Icons.edit),
-              title: const Text('Edit training'),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const EditTrainingPage()),
-                );
-              },
-            ),
             const Divider(),
             ListTile(
               leading: const Icon(Icons.settings),
               title: const Text('Settings'),
-              onTap: () => Navigator.pop(context),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const SettingsPage()),
+                );
+              },
             ),
             const Spacer(),
             ListTile(
