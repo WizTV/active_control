@@ -136,7 +136,7 @@ class _EditTrainingPageState extends State<EditTrainingPage> {
                     'Date: ${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
                     style: const TextStyle(color: Colors.white),
                   ),
-                  onTap: () async {
+                  onTap: widget.initialDate == null ? () async {
                     final picked = await showDatePicker(
                       context: context,
                       initialDate: _selectedDate,
@@ -149,7 +149,8 @@ class _EditTrainingPageState extends State<EditTrainingPage> {
                         _selectedDate = DateTime(picked.year, picked.month, picked.day);
                       });
                     }
-                  },
+                  } : null,
+                  trailing: widget.initialDate != null ? const Icon(Icons.lock, color: Colors.white70, size: 18) : null,
                 ),
               ),
             ] else ...[
