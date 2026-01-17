@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import '../widgets/app_drawer.dart';
 import '../widgets/custom_text_field.dart';
 import '../services/training_service.dart';
 import '../services/firestore_training_service.dart';
 
 class EditTrainingPage extends StatefulWidget {
   final int? trainingId;
-  const EditTrainingPage({super.key, this.trainingId});
+  final DateTime? initialDate;
+  const EditTrainingPage({super.key, this.trainingId, this.initialDate});
 
   @override
   State<EditTrainingPage> createState() => _EditTrainingPageState();
@@ -22,6 +22,7 @@ class _EditTrainingPageState extends State<EditTrainingPage> {
   bool _isEditMode = false;
   final List<Map<String, dynamic>> _pendingExercises = [];
   final Set<String> _completedExercises = {};
+  late DateTime _selectedDate;
 
   @override
   void dispose() {
@@ -34,6 +35,13 @@ class _EditTrainingPageState extends State<EditTrainingPage> {
   @override
   void initState() {
     super.initState();
+    // Normalize initial date to midnight
+    if (widget.initialDate != null) {
+      _selectedDate = DateTime(widget.initialDate!.year, widget.initialDate!.month, widget.initialDate!.day);
+    } else {
+      _selectedDate = DateTime.now();
+      _selectedDate = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
+    }
     final id = widget.trainingId;
     if (id != null) {
       final t = TrainingService.instance.getById(id);
@@ -42,6 +50,7 @@ class _EditTrainingPageState extends State<EditTrainingPage> {
         _titleController.text = t.title;
         _descriptionController.text = t.description;
         _durationController.text = t.durationMinutes.toString();
+        _selectedDate = t.trainingDate;
         // Load completed exercises
         for (final ex in t.exercises) {
           if (ex.completed) {
@@ -62,8 +71,11 @@ class _EditTrainingPageState extends State<EditTrainingPage> {
       appBar: AppBar(
         title: const Text('Edit Training'),
         backgroundColor: theme.primaryColor,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
       ),
-      drawer: const AppDrawer(),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -115,6 +127,31 @@ class _EditTrainingPageState extends State<EditTrainingPage> {
                 keyboardType: TextInputType.number,
                 controller: _durationController,
               ),
+              const SizedBox(height: 12),
+              Card(
+                color: Colors.white10,
+                child: ListTile(
+                  leading: const Icon(Icons.calendar_today, color: Colors.white70),
+                  title: Text(
+                    'Date: ${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  onTap: () async {
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: _selectedDate,
+                      firstDate: DateTime(2020),
+                      lastDate: DateTime(2100),
+                    );
+                    if (picked != null && picked != _selectedDate) {
+                      setState(() {
+                        // Normalize to midnight to avoid time-related issues
+                        _selectedDate = DateTime(picked.year, picked.month, picked.day);
+                      });
+                    }
+                  },
+                ),
+              ),
             ] else ...[
               Container(
                 padding: const EdgeInsets.all(16),
@@ -132,6 +169,8 @@ class _EditTrainingPageState extends State<EditTrainingPage> {
                       const SizedBox(height: 8),
                     ],
                     Text('Duration: ${_durationController.text} min', style: const TextStyle(color: Colors.white70)),
+                    const SizedBox(height: 8),
+                    Text('Date: ${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}', style: const TextStyle(color: Colors.white70)),
                   ],
                 ),
               ),
@@ -291,7 +330,7 @@ class _EditTrainingPageState extends State<EditTrainingPage> {
                       return;
                     }
                     if (_isNew) {
-                      _firestoreService.addTraining(title: title, description: description, durationMinutes: duration).then((newId) async {
+                      _firestoreService.addTraining(title: title, description: description, durationMinutes: duration, trainingDate: _selectedDate).then((newId) async {
                         // Add all pending exercises
                         for (final exercise in _pendingExercises) {
                           try {
@@ -318,7 +357,7 @@ class _EditTrainingPageState extends State<EditTrainingPage> {
                         }
                       });
                     } else {
-                      _firestoreService.updateTraining(widget.trainingId!, title: title, description: description, durationMinutes: duration).then((_) async {
+                      _firestoreService.updateTraining(widget.trainingId!, title: title, description: description, durationMinutes: duration, trainingDate: _selectedDate).then((_) async {
                         // Add all pending exercises
                         for (final exercise in _pendingExercises) {
                           try {

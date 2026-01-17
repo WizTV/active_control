@@ -22,6 +22,7 @@ class FirestoreTrainingService {
       TrainingService.instance.trainings.value = [];
       TrainingService.instance.resetNextId();
 
+      final trainings = <Training>[];
       for (final doc in snapshot.docs) {
         final data = doc.data();
         final exercises = (data['exercises'] as List<dynamic>?)
@@ -36,24 +37,30 @@ class FirestoreTrainingService {
                 .toList() ??
             [];
 
+        final trainingDate = data['trainingDate'] != null 
+          ? (data['trainingDate'] as Timestamp).toDate()
+          : DateTime.now();
+
         final training = Training(
           id: (data['id'] as num).toInt(),
           title: data['title'] as String,
           description: data['description'] as String,
           durationMinutes: (data['durationMinutes'] as num).toInt(),
           exercises: exercises,
+          trainingDate: trainingDate,
         );
 
-        TrainingService.instance.trainings.value = [
-          ...TrainingService.instance.trainings.value,
-          training,
-        ];
+        trainings.add(training);
 
         // Update nextId to avoid conflicts
         if (training.id >= TrainingService.instance.getNextId()) {
           TrainingService.instance.setNextId(training.id + 1);
         }
       }
+      
+      // Sort trainings by date (most recent first)
+      trainings.sort((a, b) => b.trainingDate.compareTo(a.trainingDate));
+      TrainingService.instance.trainings.value = trainings;
     } catch (e) {
       rethrow;
     }
@@ -64,6 +71,7 @@ class FirestoreTrainingService {
     required String title,
     required String description,
     required int durationMinutes,
+    DateTime? trainingDate,
   }) async {
     try {
       final user = _auth.currentUser;
@@ -74,6 +82,7 @@ class FirestoreTrainingService {
         title: title,
         description: description,
         durationMinutes: durationMinutes,
+        trainingDate: trainingDate,
       );
 
       final training = TrainingService.instance.getById(trainingId);
@@ -100,6 +109,7 @@ class FirestoreTrainingService {
     required String title,
     required String description,
     required int durationMinutes,
+    DateTime? trainingDate,
   }) async {
     try {
       final user = _auth.currentUser;
@@ -111,6 +121,7 @@ class FirestoreTrainingService {
         title: title,
         description: description,
         durationMinutes: durationMinutes,
+        trainingDate: trainingDate,
       );
 
       final training = TrainingService.instance.getById(id);
@@ -279,6 +290,7 @@ class FirestoreTrainingService {
       'title': training.title,
       'description': training.description,
       'durationMinutes': training.durationMinutes,
+      'trainingDate': Timestamp.fromDate(training.trainingDate),
       'exercises': training.exercises
           .map((e) => {
                 'id': e.id,

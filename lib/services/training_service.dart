@@ -6,6 +6,7 @@ class Training {
   String description;
   int durationMinutes;
   List<Exercise> exercises;
+  DateTime trainingDate;
 
   Training({
     required this.id,
@@ -13,7 +14,14 @@ class Training {
     required this.description,
     required this.durationMinutes,
     List<Exercise>? exercises,
-  }) : exercises = exercises ?? [];
+    DateTime? trainingDate,
+  }) : exercises = exercises ?? [],
+       trainingDate = _normalizeDate(trainingDate ?? DateTime.now());
+
+  // Normalize date to midnight (start of day) to avoid time-related issues
+  static DateTime _normalizeDate(DateTime date) {
+    return DateTime(date.year, date.month, date.day);
+  }
 }
 
 class TrainingService {
@@ -40,16 +48,16 @@ class TrainingService {
     return null;
   }
 
-  int addTraining({required String title, required String description, required int durationMinutes}) {
-    final t = Training(id: _nextId++, title: title, description: description, durationMinutes: durationMinutes, exercises: []);
+  int addTraining({required String title, required String description, required int durationMinutes, DateTime? trainingDate}) {
+    final t = Training(id: _nextId++, title: title, description: description, durationMinutes: durationMinutes, exercises: [], trainingDate: trainingDate ?? DateTime.now());
     trainings.value = [...trainings.value, t];
     return t.id;
   }
 
-  void updateTraining(int id, {required String title, required String description, required int durationMinutes}) {
+  void updateTraining(int id, {required String title, required String description, required int durationMinutes, DateTime? trainingDate}) {
     final list = trainings.value.map((t) {
       if (t.id == id) {
-        return Training(id: t.id, title: title, description: description, durationMinutes: durationMinutes, exercises: t.exercises);
+        return Training(id: t.id, title: title, description: description, durationMinutes: durationMinutes, exercises: t.exercises, trainingDate: trainingDate ?? t.trainingDate);
       }
       return t;
     }).toList();
