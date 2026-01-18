@@ -56,7 +56,7 @@ class _HomePageState extends State<HomePage> {
           children: [
             Text(
               'Welcome back!',
-              style: theme.textTheme.headlineMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+              style: theme.textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             // Calendar widget
@@ -92,29 +92,29 @@ class _HomePageState extends State<HomePage> {
                   calendarStyle: CalendarStyle(
                     outsideDaysVisible: false,
                     todayDecoration: BoxDecoration(
-                      color: Colors.blue.withOpacity(0.5),
+                      color: Colors.blue.withValues(alpha: 0.5),
                       shape: BoxShape.circle,
                     ),
                     selectedDecoration: BoxDecoration(
                       color: Colors.blue,
                       shape: BoxShape.circle,
                     ),
-                    defaultTextStyle: const TextStyle(color: Colors.white),
-                    todayTextStyle: const TextStyle(color: Colors.white),
-                    selectedTextStyle: const TextStyle(color: Colors.white),
-                    weekendTextStyle: const TextStyle(color: Colors.white70),
-                    outsideTextStyle: const TextStyle(color: Colors.white30),
+                    defaultTextStyle: TextStyle(color: theme.textTheme.bodyMedium?.color),
+                    todayTextStyle: TextStyle(color: theme.textTheme.bodyMedium?.color),
+                    selectedTextStyle: TextStyle(color: theme.textTheme.bodyMedium?.color),
+                    weekendTextStyle: TextStyle(color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7)),
+                    outsideTextStyle: TextStyle(color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.3)),
                   ),
                   headerStyle: HeaderStyle(
                     formatButtonVisible: false,
                     titleCentered: true,
-                    titleTextStyle: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                    leftChevronIcon: const Icon(Icons.chevron_left, color: Colors.white70),
-                    rightChevronIcon: const Icon(Icons.chevron_right, color: Colors.white70),
+                    titleTextStyle: TextStyle(color: theme.textTheme.bodyMedium?.color, fontSize: 16, fontWeight: FontWeight.bold),
+                    leftChevronIcon: Icon(Icons.chevron_left, color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7)),
+                    rightChevronIcon: Icon(Icons.chevron_right, color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7)),
                   ),
-                  daysOfWeekStyle: const DaysOfWeekStyle(
-                    weekdayStyle: TextStyle(color: Colors.white70),
-                    weekendStyle: TextStyle(color: Colors.white70),
+                  daysOfWeekStyle: DaysOfWeekStyle(
+                    weekdayStyle: TextStyle(color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7)),
+                    weekendStyle: TextStyle(color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7)),
                   ),
                 ),
               ),
@@ -122,7 +122,7 @@ class _HomePageState extends State<HomePage> {
             const SizedBox(height: 20),
             Text(
               'Recent trainings (Last 7)',
-              style: theme.textTheme.titleMedium?.copyWith(color: Colors.white70),
+              style: theme.textTheme.titleMedium?.copyWith(color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7)),
             ),
             const SizedBox(height: 12),
             ValueListenableBuilder<List<Training>>(
@@ -134,7 +134,7 @@ class _HomePageState extends State<HomePage> {
                   return Center(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 24.0),
-                      child: Text('No trainings yet', style: theme.textTheme.titleMedium?.copyWith(color: Colors.white70)),
+                      child: Text('No trainings yet', style: theme.textTheme.titleMedium?.copyWith(color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7))),
                     ),
                   );
                 }
@@ -153,13 +153,13 @@ class _HomePageState extends State<HomePage> {
                             backgroundColor: Colors.white,
                             child: Icon(Icons.fitness_center, color: theme.primaryColor),
                           ),
-                          title: Text('${t.title} • ${t.trainingDate.day}/${t.trainingDate.month}/${t.trainingDate.year}', style: const TextStyle(color: Colors.white)),
-                          subtitle: Text('${t.description} • ${t.durationMinutes} min', style: const TextStyle(color: Colors.white70)),
+                          title: Text('${t.title} • ${t.trainingDate.day}/${t.trainingDate.month}/${t.trainingDate.year}', style: TextStyle(color: theme.textTheme.bodyMedium?.color)),
+                          subtitle: Text('${t.description} • ${t.durationMinutes} min', style: TextStyle(color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7))),
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               IconButton(
-                                icon: Icon(Icons.chevron_right, color: Colors.white70),
+                                icon: Icon(Icons.chevron_right, color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7)),
                                 onPressed: () {
                                   Navigator.push(
                                     context,

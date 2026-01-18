@@ -3,6 +3,7 @@ import '../widgets/custom_text_field.dart';
 import '../widgets/login_button.dart';
 import '../widgets/google_button.dart';
 import '../services/auth_service.dart'; // Import the AuthService
+import '../services/theme_service.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -36,11 +37,14 @@ class _RegisterPageState extends State<RegisterPage> {
         displayName: _nameController.text.trim(),
       );
 
-      // If successful, navigate to the LoginPage
+      // If successful, navigate to the HomePage
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Account created for ${user.email}')),
       );
+      // Load theme preference after signup
+      await ThemeService().loadThemePreference();
+      if (!mounted) return;
       Navigator.pushReplacementNamed(context, '/home');
     } catch (e) {
       // Show an error message if registration fails
@@ -186,6 +190,8 @@ class _RegisterPageState extends State<RegisterPage> {
                           messenger.showSnackBar(
                             SnackBar(content: Text('Signed in as ${user.displayName ?? user.email}')),
                           );
+                          // Load theme preference after signup
+                          await ThemeService().loadThemePreference();
                           navigator.pushReplacementNamed('/home');
                         } else {
                           messenger.showSnackBar(

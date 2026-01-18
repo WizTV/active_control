@@ -86,13 +86,13 @@ class _EditTrainingPageState extends State<EditTrainingPage> {
               children: [
                 Text(
                   'Training details',
-                  style: theme.textTheme.titleLarge?.copyWith(color: Colors.white, fontWeight: FontWeight.bold),
+                  style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 Row(
                   children: [
                     Text(
                       _isEditMode ? 'Edit' : 'View',
-                      style: const TextStyle(color: Colors.white, fontSize: 14),
+                      style: TextStyle(color: theme.textTheme.bodyMedium?.color, fontSize: 14),
                     ),
                     const SizedBox(width: 8),
                     Switch(
@@ -131,10 +131,10 @@ class _EditTrainingPageState extends State<EditTrainingPage> {
               Card(
                 color: Colors.white10,
                 child: ListTile(
-                  leading: const Icon(Icons.calendar_today, color: Colors.white70),
+                  leading: Icon(Icons.calendar_today, color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7)),
                   title: Text(
                     'Date: ${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
-                    style: const TextStyle(color: Colors.white),
+                    style: TextStyle(color: theme.textTheme.bodyMedium?.color),
                   ),
                   onTap: widget.initialDate == null ? () async {
                     final picked = await showDatePicker(
@@ -150,7 +150,7 @@ class _EditTrainingPageState extends State<EditTrainingPage> {
                       });
                     }
                   } : null,
-                  trailing: widget.initialDate != null ? const Icon(Icons.lock, color: Colors.white70, size: 18) : null,
+                  trailing: widget.initialDate != null ? Icon(Icons.lock, color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7), size: 18) : null,
                 ),
               ),
             ] else ...[
@@ -163,21 +163,21 @@ class _EditTrainingPageState extends State<EditTrainingPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Title: ${_titleController.text}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                    Text('Title: ${_titleController.text}', style: TextStyle(color: theme.textTheme.bodyMedium?.color, fontWeight: FontWeight.bold, fontSize: 16)),
                     const SizedBox(height: 8),
                     if (_descriptionController.text.isNotEmpty) ...[
-                      Text('Description: ${_descriptionController.text}', style: const TextStyle(color: Colors.white70)),
+                      Text('Description: ${_descriptionController.text}', style: TextStyle(color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7))),
                       const SizedBox(height: 8),
                     ],
-                    Text('Duration: ${_durationController.text} min', style: const TextStyle(color: Colors.white70)),
+                    Text('Duration: ${_durationController.text} min', style: TextStyle(color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7))),
                     const SizedBox(height: 8),
-                    Text('Date: ${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}', style: const TextStyle(color: Colors.white70)),
+                    Text('Date: ${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}', style: TextStyle(color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7))),
                   ],
                 ),
               ),
             ],
             const SizedBox(height: 20),
-            Text('Exercises', style: theme.textTheme.titleMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
+            Text('Exercises', style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             ValueListenableBuilder<List<Training>>(
               valueListenable: TrainingService.instance.trainings,
@@ -225,21 +225,21 @@ class _EditTrainingPageState extends State<EditTrainingPage> {
                           title: Text(
                             ex.name,
                             style: TextStyle(
-                              color: _completedExercises.contains(ex.id.toString()) ? Colors.white38 : Colors.white,
+                              color: _completedExercises.contains(ex.id.toString()) ? theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.38) : theme.textTheme.bodyMedium?.color,
                               decoration: _completedExercises.contains(ex.id.toString()) ? TextDecoration.lineThrough : null,
                             ),
                           ),
                           subtitle: Text(
                             'Sets: ${ex.sets} • Reps: ${ex.reps} • Weight: ${ex.weight}',
                             style: TextStyle(
-                              color: _completedExercises.contains(ex.id.toString()) ? Colors.white30 : Colors.white70,
+                              color: _completedExercises.contains(ex.id.toString()) ? theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.3) : theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
                             ),
                           ),
                           trailing: _isEditMode ? Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               IconButton(
-                                icon: const Icon(Icons.edit, color: Colors.white70),
+                                icon: Icon(Icons.edit, color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7)),
                                 onPressed: () => _showExerciseDialog(context, exercise: ex),
                               ),
                               IconButton(
@@ -277,13 +277,13 @@ class _EditTrainingPageState extends State<EditTrainingPage> {
                         Card(
                           color: Colors.white10,
                           child: ListTile(
-                            title: Text(_pendingExercises[i]['name'] as String, style: const TextStyle(color: Colors.white)),
-                            subtitle: Text('Sets: ${_pendingExercises[i]['sets']} • Reps: ${_pendingExercises[i]['reps']} • Weight: ${_pendingExercises[i]['weight']}', style: const TextStyle(color: Colors.white70)),
+                            title: Text(_pendingExercises[i]['name'] as String, style: TextStyle(color: theme.textTheme.bodyMedium?.color)),
+                            subtitle: Text('Sets: ${_pendingExercises[i]['sets']} • Reps: ${_pendingExercises[i]['reps']} • Weight: ${_pendingExercises[i]['weight']}', style: TextStyle(color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7))),
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 IconButton(
-                                  icon: const Icon(Icons.edit, color: Colors.white70),
+                                  icon: Icon(Icons.edit, color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7)),
                                   onPressed: () => _showExerciseDialog(context, pendingIndex: i),
                                 ),
                                 IconButton(
@@ -307,8 +307,8 @@ class _EditTrainingPageState extends State<EditTrainingPage> {
                           icon: const Icon(Icons.add),
                           label: const Text('Add exercise'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white24,
-                            foregroundColor: Colors.white,
+                            backgroundColor: Colors.blue.withValues(alpha: 0.3),
+                            foregroundColor: theme.textTheme.bodyMedium?.color,
                           ),
                         ),
                       ),

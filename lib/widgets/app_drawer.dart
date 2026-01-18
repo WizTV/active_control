@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import '../services/theme_service.dart';
 import '../pages/register_page.dart';
 import '../pages/settings_page.dart';
 
@@ -26,21 +27,49 @@ class AppDrawer extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            UserAccountsDrawerHeader(
-              accountName: Text(firstName),
-              accountEmail: Text(email ?? ''),
-              currentAccountPicture: (user != null && (user.photoURL != null && user.photoURL!.isNotEmpty))
-                  ? CircleAvatar(
-                      backgroundImage: NetworkImage(user.photoURL!),
-                      backgroundColor: Colors.transparent,
-                    )
-                  : CircleAvatar(
-                      backgroundColor: const Color.fromRGBO(255, 255, 255, 0.9),
-                      child: Text(
-                        firstName.isNotEmpty ? firstName[0].toUpperCase() : 'U',
-                        style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
-                      ),
-                    ),
+            Stack(
+              children: [
+                UserAccountsDrawerHeader(
+                  accountName: Text(firstName),
+                  accountEmail: Text(email ?? ''),
+                  currentAccountPicture: (user != null && (user.photoURL != null && user.photoURL!.isNotEmpty))
+                      ? CircleAvatar(
+                          backgroundImage: NetworkImage(user.photoURL!),
+                          backgroundColor: Colors.transparent,
+                        )
+                      : CircleAvatar(
+                          backgroundColor: const Color.fromRGBO(255, 255, 255, 0.9),
+                          child: Text(
+                            firstName.isNotEmpty ? firstName[0].toUpperCase() : 'U',
+                            style: const TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                ),
+                Positioned(
+                  top: 8,
+                  right: 8,
+                  child: ValueListenableBuilder<bool>(
+                    valueListenable: ThemeService().isDarkMode,
+                    builder: (context, isDarkMode, _) {
+                      return IconButton(
+                        onPressed: () async {
+                          try {
+                            await ThemeService().toggleTheme();
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Error changing theme: $e')),
+                              );
+                            }
+                          }
+                        },
+                        icon: Icon(isDarkMode ? Icons.light_mode : Icons.dark_mode),
+                        color: Colors.white,
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
             ListTile(
               leading: const Icon(Icons.home),

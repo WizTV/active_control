@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'register_page.dart'; // Import the RegisterPage
 import '../services/auth_service.dart';
+import '../services/theme_service.dart';
 import '../widgets/custom_text_field.dart';
 import '../widgets/login_button.dart';
 import '../widgets/google_button.dart';
@@ -128,6 +129,8 @@ class _LoginPageState extends State<LoginPage> {
                             try {
                               await auth.login(_emailController.text.trim(), _passwordController.text.trim());
                               if (!mounted) return;
+                              // Load theme preference after login
+                              await ThemeService().loadThemePreference();
                               navigator.pushReplacementNamed('/home');
                             } catch (e) {
                               if (!mounted) return;
@@ -234,6 +237,8 @@ class _LoginPageState extends State<LoginPage> {
                         final user = await auth.signInWithGoogle();
                         if (!mounted) return;
                         if (user != null) {
+                          // Load theme preference after login
+                          await ThemeService().loadThemePreference();
                           navigator.pushReplacementNamed('/home');
                         }
                       } catch (e) {
