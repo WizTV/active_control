@@ -64,7 +64,7 @@ class AppDrawer extends StatelessWidget {
                           }
                         },
                         icon: Icon(isDarkMode ? Icons.light_mode : Icons.dark_mode),
-                        color: Colors.white,
+                        color: isDarkMode ? Colors.white : const Color.fromRGBO(30, 50, 100, 1),
                       );
                     },
                   ),

@@ -43,6 +43,8 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final textColor = theme.textTheme.bodyMedium?.color ?? Colors.white;
+    
     return Scaffold(
       appBar: AppBar(
         title: const Text('Home'),
@@ -99,22 +101,22 @@ class _HomePageState extends State<HomePage> {
                       color: Colors.blue,
                       shape: BoxShape.circle,
                     ),
-                    defaultTextStyle: TextStyle(color: theme.textTheme.bodyMedium?.color),
-                    todayTextStyle: TextStyle(color: theme.textTheme.bodyMedium?.color),
-                    selectedTextStyle: TextStyle(color: theme.textTheme.bodyMedium?.color),
-                    weekendTextStyle: TextStyle(color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7)),
-                    outsideTextStyle: TextStyle(color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.3)),
+                    defaultTextStyle: TextStyle(color: textColor),
+                    todayTextStyle: TextStyle(color: textColor),
+                    selectedTextStyle: TextStyle(color: textColor),
+                    weekendTextStyle: TextStyle(color: textColor.withValues(alpha: 0.7)),
+                    outsideTextStyle: TextStyle(color: textColor.withValues(alpha: 0.3)),
                   ),
                   headerStyle: HeaderStyle(
                     formatButtonVisible: false,
                     titleCentered: true,
-                    titleTextStyle: TextStyle(color: theme.textTheme.bodyMedium?.color, fontSize: 16, fontWeight: FontWeight.bold),
-                    leftChevronIcon: Icon(Icons.chevron_left, color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7)),
-                    rightChevronIcon: Icon(Icons.chevron_right, color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7)),
+                    titleTextStyle: TextStyle(color: textColor, fontSize: 16, fontWeight: FontWeight.bold),
+                    leftChevronIcon: Icon(Icons.chevron_left, color: textColor.withValues(alpha: 0.7)),
+                    rightChevronIcon: Icon(Icons.chevron_right, color: textColor.withValues(alpha: 0.7)),
                   ),
                   daysOfWeekStyle: DaysOfWeekStyle(
-                    weekdayStyle: TextStyle(color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7)),
-                    weekendStyle: TextStyle(color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7)),
+                    weekdayStyle: TextStyle(color: textColor.withValues(alpha: 0.7)),
+                    weekendStyle: TextStyle(color: textColor.withValues(alpha: 0.7)),
                   ),
                 ),
               ),
@@ -122,7 +124,7 @@ class _HomePageState extends State<HomePage> {
             const SizedBox(height: 20),
             Text(
               'Recent trainings (Last 7)',
-              style: theme.textTheme.titleMedium?.copyWith(color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7)),
+              style: theme.textTheme.titleMedium?.copyWith(color: textColor.withValues(alpha: 0.7)),
             ),
             const SizedBox(height: 12),
             ValueListenableBuilder<List<Training>>(
@@ -134,7 +136,7 @@ class _HomePageState extends State<HomePage> {
                   return Center(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 24.0),
-                      child: Text('No trainings yet', style: theme.textTheme.titleMedium?.copyWith(color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7))),
+                      child: Text('No trainings yet', style: theme.textTheme.titleMedium?.copyWith(color: textColor.withValues(alpha: 0.7))),
                     ),
                   );
                 }
@@ -153,13 +155,13 @@ class _HomePageState extends State<HomePage> {
                             backgroundColor: Colors.white,
                             child: Icon(Icons.fitness_center, color: theme.primaryColor),
                           ),
-                          title: Text('${t.title} • ${t.trainingDate.day}/${t.trainingDate.month}/${t.trainingDate.year}', style: TextStyle(color: theme.textTheme.bodyMedium?.color)),
-                          subtitle: Text('${t.description} • ${t.durationMinutes} min', style: TextStyle(color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7))),
+                          title: Text('${t.title} • ${t.trainingDate.day}/${t.trainingDate.month}/${t.trainingDate.year}', style: TextStyle(color: textColor)),
+                          subtitle: Text('${t.description} • ${t.durationMinutes} min', style: TextStyle(color: textColor.withValues(alpha: 0.7))),
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               IconButton(
-                                icon: Icon(Icons.chevron_right, color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7)),
+                                icon: Icon(Icons.chevron_right, color: textColor.withValues(alpha: 0.7)),
                                 onPressed: () {
                                   Navigator.push(
                                     context,
@@ -210,7 +212,7 @@ class _HomePageState extends State<HomePage> {
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: theme.colorScheme.secondary,
-        child: Icon(Icons.add, color: Colors.white),
+        child: Icon(Icons.add, color: textColor),
         onPressed: () {
           Navigator.pushNamed(context, '/edit-training');
         },

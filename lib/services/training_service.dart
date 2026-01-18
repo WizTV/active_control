@@ -57,7 +57,7 @@ class TrainingService {
   void updateTraining(int id, {required String title, required String description, required int durationMinutes, DateTime? trainingDate}) {
     final list = trainings.value.map((t) {
       if (t.id == id) {
-        return Training(id: t.id, title: title, description: description, durationMinutes: durationMinutes, exercises: t.exercises, trainingDate: trainingDate ?? t.trainingDate);
+        return Training(id: t.id, title: title, description: description, durationMinutes: durationMinutes, exercises: t.exercises, trainingDate: trainingDate);
       }
       return t;
     }).toList();
@@ -73,7 +73,7 @@ class TrainingService {
     final list = trainings.value.map((t) {
       if (t.id == trainingId) {
         final newEx = Exercise(id: DateTime.now().microsecondsSinceEpoch, name: name, sets: sets, reps: reps, weight: weight);
-        return Training(id: t.id, title: t.title, description: t.description, durationMinutes: t.durationMinutes, exercises: [...t.exercises, newEx]);
+        return Training(id: t.id, title: t.title, description: t.description, durationMinutes: t.durationMinutes, exercises: [...t.exercises, newEx], trainingDate: t.trainingDate);
       }
       return t;
     }).toList();
@@ -89,7 +89,7 @@ class TrainingService {
           }
           return e;
         }).toList();
-        return Training(id: t.id, title: t.title, description: t.description, durationMinutes: t.durationMinutes, exercises: updated);
+        return Training(id: t.id, title: t.title, description: t.description, durationMinutes: t.durationMinutes, exercises: updated, trainingDate: t.trainingDate);
       }
       return t;
     }).toList();
@@ -100,7 +100,7 @@ class TrainingService {
     final list = trainings.value.map((t) {
       if (t.id == trainingId) {
         final filtered = t.exercises.where((e) => e.id != exerciseId).toList();
-        return Training(id: t.id, title: t.title, description: t.description, durationMinutes: t.durationMinutes, exercises: filtered);
+        return Training(id: t.id, title: t.title, description: t.description, durationMinutes: t.durationMinutes, exercises: filtered, trainingDate: t.trainingDate);
       }
       return t;
     }).toList();

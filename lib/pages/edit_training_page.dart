@@ -50,7 +50,8 @@ class _EditTrainingPageState extends State<EditTrainingPage> {
         _titleController.text = t.title;
         _descriptionController.text = t.description;
         _durationController.text = t.durationMinutes.toString();
-        _selectedDate = t.trainingDate;
+        // Normalize the training date to midnight
+        _selectedDate = DateTime(t.trainingDate.year, t.trainingDate.month, t.trainingDate.day);
         // Load completed exercises
         for (final ex in t.exercises) {
           if (ex.completed) {
@@ -67,6 +68,8 @@ class _EditTrainingPageState extends State<EditTrainingPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final textColor = theme.textTheme.bodyMedium?.color ?? Colors.white;
+    
     return Scaffold(
       appBar: AppBar(
         title: const Text('Edit Training'),
@@ -92,7 +95,7 @@ class _EditTrainingPageState extends State<EditTrainingPage> {
                   children: [
                     Text(
                       _isEditMode ? 'Edit' : 'View',
-                      style: TextStyle(color: theme.textTheme.bodyMedium?.color, fontSize: 14),
+                      style: TextStyle(color: textColor, fontSize: 14),
                     ),
                     const SizedBox(width: 8),
                     Switch(
@@ -131,10 +134,10 @@ class _EditTrainingPageState extends State<EditTrainingPage> {
               Card(
                 color: Colors.white10,
                 child: ListTile(
-                  leading: Icon(Icons.calendar_today, color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7)),
+                  leading: Icon(Icons.calendar_today, color: textColor.withValues(alpha: 0.7)),
                   title: Text(
                     'Date: ${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
-                    style: TextStyle(color: theme.textTheme.bodyMedium?.color),
+                    style: TextStyle(color: textColor),
                   ),
                   onTap: widget.initialDate == null ? () async {
                     final picked = await showDatePicker(
@@ -150,28 +153,28 @@ class _EditTrainingPageState extends State<EditTrainingPage> {
                       });
                     }
                   } : null,
-                  trailing: widget.initialDate != null ? Icon(Icons.lock, color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7), size: 18) : null,
+                  trailing: widget.initialDate != null ? Icon(Icons.lock, color: textColor.withValues(alpha: 0.7), size: 18) : null,
                 ),
               ),
             ] else ...[
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white10,
+                  color: Colors.grey[300],
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Title: ${_titleController.text}', style: TextStyle(color: theme.textTheme.bodyMedium?.color, fontWeight: FontWeight.bold, fontSize: 16)),
+                    Text('Title: ${_titleController.text}', style: const TextStyle(color: Color.fromARGB(255, 30, 50, 100), fontWeight: FontWeight.bold, fontSize: 16)),
                     const SizedBox(height: 8),
                     if (_descriptionController.text.isNotEmpty) ...[
-                      Text('Description: ${_descriptionController.text}', style: TextStyle(color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7))),
+                      Text('Description: ${_descriptionController.text}', style: const TextStyle(color: Color.fromARGB(255, 30, 50, 100))),
                       const SizedBox(height: 8),
                     ],
-                    Text('Duration: ${_durationController.text} min', style: TextStyle(color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7))),
+                    Text('Duration: ${_durationController.text} min', style: const TextStyle(color: Color.fromARGB(255, 30, 50, 100))),
                     const SizedBox(height: 8),
-                    Text('Date: ${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}', style: TextStyle(color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7))),
+                    Text('Date: ${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}', style: const TextStyle(color: Color.fromARGB(255, 30, 50, 100))),
                   ],
                 ),
               ),
@@ -225,21 +228,21 @@ class _EditTrainingPageState extends State<EditTrainingPage> {
                           title: Text(
                             ex.name,
                             style: TextStyle(
-                              color: _completedExercises.contains(ex.id.toString()) ? theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.38) : theme.textTheme.bodyMedium?.color,
+                              color: _completedExercises.contains(ex.id.toString()) ? textColor.withValues(alpha: 0.38) : textColor,
                               decoration: _completedExercises.contains(ex.id.toString()) ? TextDecoration.lineThrough : null,
                             ),
                           ),
                           subtitle: Text(
                             'Sets: ${ex.sets} • Reps: ${ex.reps} • Weight: ${ex.weight}',
                             style: TextStyle(
-                              color: _completedExercises.contains(ex.id.toString()) ? theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.3) : theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
+                              color: _completedExercises.contains(ex.id.toString()) ? textColor.withValues(alpha: 0.3) : textColor.withValues(alpha: 0.7),
                             ),
                           ),
                           trailing: _isEditMode ? Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               IconButton(
-                                icon: Icon(Icons.edit, color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7)),
+                                icon: Icon(Icons.edit, color: textColor.withValues(alpha: 0.7)),
                                 onPressed: () => _showExerciseDialog(context, exercise: ex),
                               ),
                               IconButton(
@@ -277,13 +280,13 @@ class _EditTrainingPageState extends State<EditTrainingPage> {
                         Card(
                           color: Colors.white10,
                           child: ListTile(
-                            title: Text(_pendingExercises[i]['name'] as String, style: TextStyle(color: theme.textTheme.bodyMedium?.color)),
-                            subtitle: Text('Sets: ${_pendingExercises[i]['sets']} • Reps: ${_pendingExercises[i]['reps']} • Weight: ${_pendingExercises[i]['weight']}', style: TextStyle(color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7))),
+                            title: Text(_pendingExercises[i]['name'] as String, style: TextStyle(color: textColor)),
+                            subtitle: Text('Sets: ${_pendingExercises[i]['sets']} • Reps: ${_pendingExercises[i]['reps']} • Weight: ${_pendingExercises[i]['weight']}', style: TextStyle(color: textColor.withValues(alpha: 0.7))),
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 IconButton(
-                                  icon: Icon(Icons.edit, color: theme.textTheme.bodyMedium?.color?.withValues(alpha: 0.7)),
+                                  icon: Icon(Icons.edit, color: textColor.withValues(alpha: 0.7)),
                                   onPressed: () => _showExerciseDialog(context, pendingIndex: i),
                                 ),
                                 IconButton(
@@ -307,8 +310,8 @@ class _EditTrainingPageState extends State<EditTrainingPage> {
                           icon: const Icon(Icons.add),
                           label: const Text('Add exercise'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue.withValues(alpha: 0.3),
-                            foregroundColor: theme.textTheme.bodyMedium?.color,
+                            backgroundColor: Colors.white24,
+                            foregroundColor: textColor,
                           ),
                         ),
                       ),
@@ -424,30 +427,71 @@ class _EditTrainingPageState extends State<EditTrainingPage> {
     final weightCtrl = TextEditingController(text: exercise?.weight.toString() ?? pendingExercise?['weight']?.toString() ?? '0');
 
     final isEdit = exercise != null || isPendingEdit;
+    final theme = Theme.of(context);
+    final textColor = theme.textTheme.bodyMedium?.color ?? Colors.white;
 
     final result = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(isEdit ? 'Edit exercise' : 'Add exercise'),
+        title: Text(isEdit ? 'Edit exercise' : 'Add exercise', style: TextStyle(color: textColor)),
         content: SingleChildScrollView(
           child: Column(
             children: [
-              TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Name')),
-              TextField(controller: setsCtrl, decoration: const InputDecoration(labelText: 'Sets'), keyboardType: TextInputType.number),
-              TextField(controller: repsCtrl, decoration: const InputDecoration(labelText: 'Reps'), keyboardType: TextInputType.number),
-              TextField(controller: weightCtrl, decoration: const InputDecoration(labelText: 'Weight'), keyboardType: TextInputType.numberWithOptions(decimal: true)),
+              TextField(
+                controller: nameCtrl,
+                decoration: InputDecoration(
+                  labelText: 'Name',
+                  labelStyle: TextStyle(color: textColor),
+                  focusedBorder: const UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.grey, width: 2.0),
+                  ),
+                ),
+              ),
+              TextField(
+                controller: setsCtrl,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: 'Sets',
+                  labelStyle: TextStyle(color: textColor),
+                  focusedBorder: const UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.grey, width: 2.0),
+                  ),
+                ),
+              ),
+              TextField(
+                controller: repsCtrl,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: 'Reps',
+                  labelStyle: TextStyle(color: textColor),
+                  focusedBorder: const UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.grey, width: 2.0),
+                  ),
+                ),
+              ),
+              TextField(
+                controller: weightCtrl,
+                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                decoration: InputDecoration(
+                  labelText: 'Weight',
+                  labelStyle: TextStyle(color: textColor),
+                  focusedBorder: const UnderlineInputBorder(
+                    borderSide: BorderSide(color: Colors.grey, width: 2.0),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text('Cancel', style: TextStyle(color: textColor))),
           TextButton(
             onPressed: () {
               final name = nameCtrl.text.trim();
               final sets = int.tryParse(setsCtrl.text.trim()) ?? 0;
               final reps = int.tryParse(repsCtrl.text.trim()) ?? 0;
               final weight = double.tryParse(weightCtrl.text.trim()) ?? 0.0;
-              if (name.isEmpty) return; // keep dialog open
+              if (name.isEmpty) return;
               
               if (exercise != null) {
                 // Editing a saved exercise
@@ -495,14 +539,13 @@ class _EditTrainingPageState extends State<EditTrainingPage> {
                 Navigator.pop(context, true);
               }
             },
-            child: Text(isEdit ? 'Save' : 'Add'),
+            child: Text(isEdit ? 'Save' : 'Add', style: TextStyle(color: textColor)),
           ),
         ],
       ),
     );
 
     if (result == true) {
-      // optional: show feedback
     }
   }
 }
